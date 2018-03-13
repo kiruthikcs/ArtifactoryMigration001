@@ -13,15 +13,14 @@
 - name: Start the Mysql service
   service: name=mysqld state=started enabled=true
 
-- name: Find the temporaty password generated
-  shell: "echo `grep 'temporary.*root@localhost' /var/log/mysqld.log | sed 's/.*root@localhost: //'`"
-  register: mysql_root_password_temp
-  tags: register
+  notify:
+  - Find the temporaty password generated
+  run_once: true
 
-- name: Set the password from temporaty password
-  shell: 'mysql -e "SET PASSWORD = PASSWORD(''{{ Mysql_root_password }}'');" --connect-expired-password -u root -p"{{ mysql_root_password_temp.stdout }}"'
-  register: set_pass
-  failed_when: set_pass.rc >= 2
+  notify:
+  - Set the password from temporaty password
+  run_once: true
+
 
 - name: Remove test database if exists
   mysql_db: name=test state=absent login_user={{ DB_USER }} login_password={{ Mysql_root_password }}
